@@ -562,6 +562,50 @@ async def job_weekly_report(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 def main() -> None:
     """Start the bot."""
+    # ── Cloud Health Check Server (Render / Koyeb) ──────────────────────
+    # Start immediately so cloud port checkers (Render) detect port 10000 in < 50ms
+    port = int(os.getenv("PORT", "0"))
+    if port > 0:
+        import threading
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+        class HealthCheckHandler(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def do_HEAD(self):
+                self.send_response(200)
+                self.send_header("Content-type", "text/plain")
+                self.send_header("Content-Length", "39")
+                self.send_header("Connection", "close")
+                self.end_headers()
+
+            def do_GET(self):
+                msg = b"JEE Buddy Bot is Alive & Running 24/7!\n"
+                self.send_response(200)
+                self.send_header("Content-type", "text/plain")
+                self.send_header("Content-Length", str(len(msg)))
+                self.send_header("Connection", "close")
+                self.end_headers()
+                self.wfile.write(msg)
+
+            def log_message(self, format, *args):
+                pass  # Suppress HTTP access logs to keep terminal clean
+
+        class HealthCheckServer(ThreadingHTTPServer):
+            allow_reuse_address = True
+            daemon_threads = True
+
+        def run_health_server():
+            try:
+                server = HealthCheckServer(("0.0.0.0", port), HealthCheckHandler)
+                logger.info("Healthcheck HTTP server listening on 0.0.0.0:%d", port)
+                server.serve_forever()
+            except Exception as e:
+                logger.exception("Healthcheck server error: %s", e)
+
+        t = threading.Thread(target=run_health_server, daemon=True)
+        t.start()
+
     # Test mode
     if "--test" in sys.argv:
         print("[TEST] Running config validation...")
@@ -614,13 +658,6 @@ def main() -> None:
     )
 
     # ── Schedule daily jobs (IST = UTC+5:30) ────────────────────────────
-    # python-telegram-bot's job_queue uses UTC, so we offset by -5:30
-    # IST 06:30 = UTC 01:00
-    # IST 15:00 = UTC 09:30
-    # IST 19:00 = UTC 13:30
-    # IST 22:30 = UTC 17:00
-    # IST Sun 20:00 = UTC Sun 14:30
-
     jq = app.job_queue
     if jq is not None:
         jq.run_daily(job_morning_plan, time=time(1, 0))      # IST 6:30 AM
@@ -634,52 +671,16 @@ def main() -> None:
             "job_queue not available — install python-telegram-bot[job-queue]"
         )
 
-    # ── Cloud Health Check Server (Render / Koyeb) ──────────────────────
-    port = int(os.getenv("PORT", "0"))
-    if port > 0:
-        import threading
-        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-
-        class HealthCheckHandler(BaseHTTPRequestHandler):
-            protocol_version = "HTTP/1.1"
-
-            def do_HEAD(self):
-                self.send_response(200)
-                self.send_header("Content-type", "text/plain")
-                self.send_header("Content-Length", "39")
-                self.send_header("Connection", "close")
-                self.end_headers()
-
-            def do_GET(self):
-                msg = b"JEE Buddy Bot is Alive & Running 24/7!\n"
-                self.send_response(200)
-                self.send_header("Content-type", "text/plain")
-                self.send_header("Content-Length", str(len(msg)))
-                self.send_header("Connection", "close")
-                self.end_headers()
-                self.wfile.write(msg)
-
-            def log_message(self, format, *args):
-                pass  # Suppress HTTP access logs to keep terminal clean
-
-        class HealthCheckServer(ThreadingHTTPServer):
-            allow_reuse_address = True
-            daemon_threads = True
-
-        def run_health_server():
-            try:
-                server = HealthCheckServer(("0.0.0.0", port), HealthCheckHandler)
-                logger.info("Healthcheck HTTP server listening on 0.0.0.0:%d", port)
-                server.serve_forever()
-            except Exception as e:
-                logger.exception("Healthcheck server error: %s", e)
-
-        t = threading.Thread(target=run_health_server, daemon=True)
-        t.start()
-
     # Start polling
     logger.info("Bot is running! Press Ctrl+C to stop.")
-    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+    try:
+        app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+    except Exception as e:
+        logger.exception("Error during bot polling: %s", e)
+        if port > 0:
+            import time
+            while True:
+                time.sleep(3600)
 
 
 if __name__ == "__main__":
