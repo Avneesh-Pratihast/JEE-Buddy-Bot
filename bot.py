@@ -641,6 +641,11 @@ def main() -> None:
         from http.server import BaseHTTPRequestHandler, HTTPServer
 
         class HealthCheckHandler(BaseHTTPRequestHandler):
+            def do_HEAD(self):
+                self.send_response(200)
+                self.send_header("Content-type", "text/plain")
+                self.end_headers()
+
             def do_GET(self):
                 self.send_response(200)
                 self.send_header("Content-type", "text/plain")
@@ -650,10 +655,16 @@ def main() -> None:
             def log_message(self, format, *args):
                 pass  # Suppress HTTP access logs to keep terminal clean
 
+        class HealthCheckServer(HTTPServer):
+            allow_reuse_address = True
+
         def run_health_server():
-            server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
-            logger.info("Healthcheck HTTP server listening on port %d", port)
-            server.serve_forever()
+            try:
+                server = HealthCheckServer(("0.0.0.0", port), HealthCheckHandler)
+                logger.info("Healthcheck HTTP server listening on 0.0.0.0:%d", port)
+                server.serve_forever()
+            except Exception as e:
+                logger.exception("Healthcheck server error: %s", e)
 
         t = threading.Thread(target=run_health_server, daemon=True)
         t.start()
@@ -664,4 +675,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        logger.critical("Fatal crash in bot.py: %s", e, exc_info=True)
+        sys.exit(1)
