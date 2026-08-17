@@ -30,7 +30,7 @@ CHAPTER_TRACKER = Path(os.getenv(
 ))
 
 # ── Gemini Model ────────────────────────────────────────────────────────────
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
 
 # ── Schedule Times (24h format, IST) ────────────────────────────────────────
 MORNING_PLAN_HOUR, MORNING_PLAN_MIN = 6, 30        # 6:30 AM

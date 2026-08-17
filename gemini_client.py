@@ -72,21 +72,35 @@ SCHEDULE_PARSER_SYSTEM = (
 
 # ── Public API ──────────────────────────────────────────────────────────────
 
+FALLBACK_MODELS = [
+    config.GEMINI_MODEL,
+    "gemini-3.7-flash",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+]
+
+
 async def ask(prompt: str, *, system: str | None = JEE_SYSTEM) -> str:
-    """Send a text prompt to Gemini and return the response."""
-    try:
-        client = _get_client()
-        response = await client.aio.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system,
-            ) if system else None,
-        )
-        return response.text
-    except Exception:
-        logger.exception("Gemini text generation failed")
-        return "⚠️ Sorry, I couldn't process that. Please try again."
+    """Send a text prompt to Gemini with automatic model fallback."""
+    client = _get_client()
+    seen = set()
+    models_to_try = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]
+
+    for model_name in models_to_try:
+        try:
+            response = await client.aio.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system,
+                ) if system else None,
+            )
+            if response.text:
+                return response.text
+        except Exception as e:
+            logger.warning("Model %s failed: %s. Trying fallback...", model_name, e)
+
+    return "⚠️ High traffic on AI servers. Please retry in a moment."
 
 
 async def ask_with_image(
@@ -95,21 +109,27 @@ async def ask_with_image(
     *,
     system: str | None = JEE_SYSTEM,
 ) -> str:
-    """Send an image + text prompt to Gemini and return the response."""
-    try:
-        client = _get_client()
-        img = Image.open(BytesIO(image_bytes))
-        response = await client.aio.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=[prompt, img],
-            config=types.GenerateContentConfig(
-                system_instruction=system,
-            ) if system else None,
-        )
-        return response.text
-    except Exception:
-        logger.exception("Gemini image generation failed")
-        return "⚠️ Sorry, I couldn't read that image. Try a clearer photo."
+    """Send an image + text prompt to Gemini with automatic model fallback."""
+    client = _get_client()
+    img = Image.open(BytesIO(image_bytes))
+    seen = set()
+    models_to_try = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]
+
+    for model_name in models_to_try:
+        try:
+            response = await client.aio.models.generate_content(
+                model=model_name,
+                contents=[prompt, img],
+                config=types.GenerateContentConfig(
+                    system_instruction=system,
+                ) if system else None,
+            )
+            if response.text:
+                return response.text
+        except Exception as e:
+            logger.warning("Vision model %s failed: %s. Trying fallback...", model_name, e)
+
+    return "⚠️ Could not analyze image. Try a clearer photo."
 
 
 async def parse_schedule(raw_text: str) -> str:
