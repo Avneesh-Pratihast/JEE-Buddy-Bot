@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: jee-buddy-bot
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: AVNEESH_CHAT_ID
+        value: "6178850659"
+      - key: PORT
+        value: "10000"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
