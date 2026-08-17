@@ -17,18 +17,41 @@ import config
 
 logger = logging.getLogger(__name__)
 
-# ── Initialisation ──────────────────────────────────────────────────────────
-_client: genai.Client | None = None
+# ── Multi-Key Client Pool ──────────────────────────────────────────────────
+_clients: list[genai.Client] = []
+_key_index: int = 0
 
 
-def _get_client() -> genai.Client:
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=config.GEMINI_API_KEY)
-    return _client
+def _get_clients() -> list[genai.Client]:
+    global _clients
+    if not _clients:
+        keys = config.GEMINI_API_KEYS
+        for k in keys:
+            if k:
+                _clients.append(genai.Client(api_key=k))
+        if not _clients:
+            _clients.append(genai.Client(api_key=config.GEMINI_API_KEY))
+    return _clients
 
 
-# ── JEE system prompt ──────────────────────────────────────────────────────
+def _next_client() -> genai.Client:
+    """Round-robin through available API keys."""
+    global _key_index
+    clients = _get_clients()
+    client = clients[_key_index % len(clients)]
+    _key_index = (_key_index + 1) % len(clients)
+    return client
+
+
+# ── Optimal Model Fallback Hierarchy ───────────────────────────────────────
+FALLBACK_MODELS = [
+    "gemini-3.7-flash",       # Tier 1: Highest intelligence & deep reasoning
+    "gemini-3.6-flash",       # Tier 2: High capability & speed
+    "gemini-3.5-flash",       # Tier 3: Production stable & fast
+    "gemini-3.5-flash-lite",  # Tier 4: Guaranteed fallback under extreme load
+]
+
+# ── System Prompts ─────────────────────────────────────────────────────────
 
 JEE_SYSTEM = (
     "You are a JEE Advanced expert tutor and doubt solver for Avneesh, targeting Top 100 AIR in JEE Advanced 2028.\n"
@@ -70,35 +93,24 @@ SCHEDULE_PARSER_SYSTEM = (
 )
 
 
-# ── Public API ──────────────────────────────────────────────────────────────
-
-FALLBACK_MODELS = [
-    "gemini-3.5-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.7-flash",
-    config.GEMINI_MODEL,
-]
-
-
 async def ask(prompt: str, *, system: str | None = JEE_SYSTEM) -> str:
-    """Send a text prompt to Gemini with automatic model fallback."""
-    client = _get_client()
-    seen = set()
-    models_to_try = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]
+    """Send a text prompt to Gemini with multi-key rotation and multi-model fallback."""
+    clients = _get_clients()
 
-    for model_name in models_to_try:
-        try:
-            response = await client.aio.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=system,
-                ) if system else None,
-            )
-            if response.text:
-                return response.text
-        except Exception as e:
-            logger.warning("Model %s failed: %s. Trying fallback...", model_name, e)
+    for client in clients:
+        for model_name in FALLBACK_MODELS:
+            try:
+                response = await client.aio.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system,
+                    ) if system else None,
+                )
+                if response.text:
+                    return response.text
+            except Exception as e:
+                logger.warning("Model %s with key %s failed: %s. Trying fallback...", model_name, client, e)
 
     return "⚠️ High traffic on AI servers. Please retry in a moment."
 
@@ -109,25 +121,24 @@ async def ask_with_image(
     *,
     system: str | None = JEE_SYSTEM,
 ) -> str:
-    """Send an image + text prompt to Gemini with automatic model fallback."""
-    client = _get_client()
+    """Send an image + text prompt to Gemini with multi-key rotation and multi-model fallback."""
+    clients = _get_clients()
     img = Image.open(BytesIO(image_bytes))
-    seen = set()
-    models_to_try = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]
 
-    for model_name in models_to_try:
-        try:
-            response = await client.aio.models.generate_content(
-                model=model_name,
-                contents=[prompt, img],
-                config=types.GenerateContentConfig(
-                    system_instruction=system,
-                ) if system else None,
-            )
-            if response.text:
-                return response.text
-        except Exception as e:
-            logger.warning("Vision model %s failed: %s. Trying fallback...", model_name, e)
+    for client in clients:
+        for model_name in FALLBACK_MODELS:
+            try:
+                response = await client.aio.models.generate_content(
+                    model=model_name,
+                    contents=[prompt, img],
+                    config=types.GenerateContentConfig(
+                        system_instruction=system,
+                    ) if system else None,
+                )
+                if response.text:
+                    return response.text
+            except Exception as e:
+                logger.warning("Vision model %s failed: %s. Trying fallback...", model_name, e)
 
     return "⚠️ Could not analyze image. Try a clearer photo."
 

@@ -14,6 +14,12 @@ load_dotenv(Path(__file__).parent / ".env")
 TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
+# Support multiple Gemini API keys (comma-separated or single)
+raw_keys = os.getenv("GEMINI_API_KEYS", GEMINI_API_KEY)
+GEMINI_API_KEYS: list[str] = [k.strip() for k in raw_keys.split(",") if k.strip()]
+if not GEMINI_API_KEYS and GEMINI_API_KEY:
+    GEMINI_API_KEYS = [GEMINI_API_KEY]
+
 # ── User ────────────────────────────────────────────────────────────────────
 # Your Telegram numeric chat ID (send /start to @userinfobot to find it)
 AVNEESH_CHAT_ID: int = int(os.getenv("AVNEESH_CHAT_ID", "0"))
