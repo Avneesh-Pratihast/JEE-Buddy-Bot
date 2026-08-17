@@ -638,25 +638,33 @@ def main() -> None:
     port = int(os.getenv("PORT", "0"))
     if port > 0:
         import threading
-        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
         class HealthCheckHandler(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
             def do_HEAD(self):
                 self.send_response(200)
                 self.send_header("Content-type", "text/plain")
+                self.send_header("Content-Length", "39")
+                self.send_header("Connection", "close")
                 self.end_headers()
 
             def do_GET(self):
+                msg = b"JEE Buddy Bot is Alive & Running 24/7!\n"
                 self.send_response(200)
                 self.send_header("Content-type", "text/plain")
+                self.send_header("Content-Length", str(len(msg)))
+                self.send_header("Connection", "close")
                 self.end_headers()
-                self.wfile.write(b"JEE Buddy Bot is Alive & Running 24/7!")
+                self.wfile.write(msg)
 
             def log_message(self, format, *args):
                 pass  # Suppress HTTP access logs to keep terminal clean
 
-        class HealthCheckServer(HTTPServer):
+        class HealthCheckServer(ThreadingHTTPServer):
             allow_reuse_address = True
+            daemon_threads = True
 
         def run_health_server():
             try:
@@ -676,6 +684,10 @@ def main() -> None:
 
 if __name__ == "__main__":
     try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(line_buffering=True)
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(line_buffering=True)
         main()
     except Exception as e:
         import traceback
