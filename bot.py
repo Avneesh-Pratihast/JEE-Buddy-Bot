@@ -660,7 +660,7 @@ def main() -> None:
 
     # Start polling
     logger.info("Bot is running! Press Ctrl+C to stop.")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 
 if __name__ == "__main__":

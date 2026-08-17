@@ -27,15 +27,24 @@ if not GEMINI_API_KEY and GEMINI_API_KEYS:
 AVNEESH_CHAT_ID: int = int(os.getenv("AVNEESH_CHAT_ID", "0"))
 
 # ── Paths ───────────────────────────────────────────────────────────────────
-OBSIDIAN_VAULT = Path(os.getenv(
-    "OBSIDIAN_VAULT_PATH",
-    r"C:\Users\HP\Documents\Avneesh\Avneexh_Jee_Prep",
-))
 DATA_DIR = Path(__file__).parent / "data"
-CHAPTER_TRACKER = Path(os.getenv(
-    "CHAPTER_TRACKER_PATH",
-    r"C:\Users\HP\.gemini\config\skills\jee-study-commander\resources\chapter_tracker.json",
-))
+
+default_vault_env = os.getenv("OBSIDIAN_VAULT_PATH")
+if default_vault_env and Path(default_vault_env).exists():
+    OBSIDIAN_VAULT = Path(default_vault_env)
+elif Path(r"C:\Users\HP\Documents\Avneesh\Avneexh_Jee_Prep").exists():
+    OBSIDIAN_VAULT = Path(r"C:\Users\HP\Documents\Avneesh\Avneexh_Jee_Prep")
+else:
+    OBSIDIAN_VAULT = DATA_DIR / "vault_mirror"
+OBSIDIAN_VAULT.mkdir(parents=True, exist_ok=True)
+
+default_tracker_env = os.getenv("CHAPTER_TRACKER_PATH")
+if default_tracker_env and Path(default_tracker_env).exists():
+    CHAPTER_TRACKER = Path(default_tracker_env)
+elif Path(r"C:\Users\HP\.gemini\config\skills\jee-study-commander\resources\chapter_tracker.json").exists():
+    CHAPTER_TRACKER = Path(r"C:\Users\HP\.gemini\config\skills\jee-study-commander\resources\chapter_tracker.json")
+else:
+    CHAPTER_TRACKER = DATA_DIR / "chapter_tracker.json"
 
 # ── Gemini Model ────────────────────────────────────────────────────────────
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
