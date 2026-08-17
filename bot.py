@@ -673,14 +673,16 @@ def main() -> None:
 
     # Start polling
     logger.info("Bot is running! Press Ctrl+C to stop.")
-    try:
-        app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
-    except Exception as e:
-        logger.exception("Error during bot polling: %s", e)
+    while True:
+        try:
+            app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+        except Exception as e:
+            logger.exception("Error during bot polling: %s", e)
         if port > 0:
             import time
-            while True:
-                time.sleep(3600)
+            time.sleep(5)
+        else:
+            break
 
 
 if __name__ == "__main__":

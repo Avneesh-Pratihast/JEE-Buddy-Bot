@@ -10,13 +10,29 @@ from dotenv import load_dotenv
 # Load .env file from the project root
 load_dotenv(Path(__file__).parent / ".env")
 
+def _clean_str(val: str | None, default: str = "") -> str:
+    if not val:
+        return default
+    return val.strip().strip('"').strip("'")
+
+
+def _clean_int(val: str | None, default: int = 0) -> int:
+    if not val:
+        return default
+    cleaned = val.strip().strip('"').strip("'")
+    try:
+        return int(cleaned)
+    except (ValueError, TypeError):
+        return default
+
+
 # ── API Keys ────────────────────────────────────────────────────────────────
-TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+TELEGRAM_BOT_TOKEN: str = _clean_str(os.getenv("TELEGRAM_BOT_TOKEN"))
+GEMINI_API_KEY: str = _clean_str(os.getenv("GEMINI_API_KEY"))
 
 # Support multiple Gemini API keys (comma-separated or single)
-raw_keys = os.getenv("GEMINI_API_KEYS", GEMINI_API_KEY)
-GEMINI_API_KEYS: list[str] = [k.strip() for k in raw_keys.split(",") if k.strip()]
+raw_keys = _clean_str(os.getenv("GEMINI_API_KEYS", GEMINI_API_KEY))
+GEMINI_API_KEYS: list[str] = [_clean_str(k) for k in raw_keys.split(",") if _clean_str(k)]
 if not GEMINI_API_KEYS and GEMINI_API_KEY:
     GEMINI_API_KEYS = [GEMINI_API_KEY]
 if not GEMINI_API_KEY and GEMINI_API_KEYS:
@@ -24,12 +40,12 @@ if not GEMINI_API_KEY and GEMINI_API_KEYS:
 
 # ── User ────────────────────────────────────────────────────────────────────
 # Your Telegram numeric chat ID (send /start to @userinfobot to find it)
-AVNEESH_CHAT_ID: int = int(os.getenv("AVNEESH_CHAT_ID", "0"))
+AVNEESH_CHAT_ID: int = _clean_int(os.getenv("AVNEESH_CHAT_ID"))
 
 # ── Paths ───────────────────────────────────────────────────────────────────
 DATA_DIR = Path(__file__).parent / "data"
 
-default_vault_env = os.getenv("OBSIDIAN_VAULT_PATH")
+default_vault_env = _clean_str(os.getenv("OBSIDIAN_VAULT_PATH"))
 if default_vault_env and Path(default_vault_env).exists():
     OBSIDIAN_VAULT = Path(default_vault_env)
 elif Path(r"C:\Users\HP\Documents\Avneesh\Avneexh_Jee_Prep").exists():
@@ -38,7 +54,7 @@ else:
     OBSIDIAN_VAULT = DATA_DIR / "vault_mirror"
 OBSIDIAN_VAULT.mkdir(parents=True, exist_ok=True)
 
-default_tracker_env = os.getenv("CHAPTER_TRACKER_PATH")
+default_tracker_env = _clean_str(os.getenv("CHAPTER_TRACKER_PATH"))
 if default_tracker_env and Path(default_tracker_env).exists():
     CHAPTER_TRACKER = Path(default_tracker_env)
 elif Path(r"C:\Users\HP\.gemini\config\skills\jee-study-commander\resources\chapter_tracker.json").exists():
@@ -47,7 +63,7 @@ else:
     CHAPTER_TRACKER = DATA_DIR / "chapter_tracker.json"
 
 # ── Gemini Model ────────────────────────────────────────────────────────────
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_MODEL: str = _clean_str(os.getenv("GEMINI_MODEL"), "gemini-3.5-flash")
 
 # ── Schedule Times (24h format, IST) ────────────────────────────────────────
 MORNING_PLAN_HOUR, MORNING_PLAN_MIN = 6, 30        # 6:30 AM
