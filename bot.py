@@ -404,6 +404,58 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
+# ── Document Handler ────────────────────────────────────────────────────────
+
+async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle uploaded documents like schedule PDFs."""
+    if not _is_avneesh(update):
+        return
+
+    doc = update.message.document
+    caption = update.message.caption or ""
+    
+    if doc.mime_type == "application/pdf" and "/schedule" in caption:
+        await update.message.reply_text("📥 Received schedule PDF! Parsing...")
+        try:
+            file = await context.bot.get_file(doc.file_id)
+            pdf_bytes = await file.download_as_bytearray()
+            
+            parsed_json = await gemini_client.ask_with_file(
+                bytes(pdf_bytes),
+                "application/pdf",
+                "Parse this coaching schedule PDF. Return ONLY raw JSON without markdown formatting.",
+                system=gemini_client.SCHEDULE_PARSER_SYSTEM
+            )
+            
+            # Clean markdown backticks if any
+            clean_json = parsed_json.strip()
+            if clean_json.startswith("```json"):
+                clean_json = clean_json[7:-3]
+            elif clean_json.startswith("```"):
+                clean_json = clean_json[3:-3]
+            
+            import json
+            import os
+            import obsidian_writer
+            
+            data = json.loads(clean_json.strip())
+            
+            os.makedirs("data", exist_ok=True)
+            with open("data/aakash_schedule.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+                
+            obsidian_writer.update_schedule_note(data)
+            
+            await update.message.reply_text("✅ Schedule successfully parsed and saved to Obsidian!")
+        except json.JSONDecodeError as e:
+            logger.error("JSON parse error: %s\nOutput was: %s", e, parsed_json)
+            await update.message.reply_text("❌ Failed to parse schedule. The AI did not return valid JSON.")
+        except Exception as e:
+            logger.exception("Failed to process PDF: %s", e)
+            await update.message.reply_text(f"⚠️ Error processing PDF: {e}")
+
+
+
 # ── Forwarded Message Handler (Schedule Parsing) ───────────────────────────
 
 async def handle_forwarded(
@@ -651,6 +703,9 @@ def main() -> None:
 
     # Photo handler (for doubt solving via images)
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    
+    # Document handler (for PDF schedules)
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
 
     # Forwarded message handler (for Aakash schedule parsing)
     app.add_handler(
@@ -679,8 +734,8 @@ def main() -> None:
         except Exception as e:
             logger.exception("Error during bot polling: %s", e)
         if port > 0:
-            import time
-            time.sleep(5)
+            import asyncio
+            asyncio.run(asyncio.sleep(5))
         else:
             break
 

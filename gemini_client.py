@@ -143,6 +143,37 @@ async def ask_with_image(
     return "⚠️ Could not analyze image. Try a clearer photo."
 
 
+async def ask_with_file(
+    file_bytes: bytes,
+    mime_type: str,
+    prompt: str,
+    *,
+    system: str | None = None,
+) -> str:
+    """Send a file (like PDF) + text prompt to Gemini."""
+    clients = _get_clients()
+    
+    # Use google.genai types
+    part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+
+    for client in clients:
+        for model_name in FALLBACK_MODELS:
+            try:
+                response = await client.aio.models.generate_content(
+                    model=model_name,
+                    contents=[part, prompt],
+                    config=types.GenerateContentConfig(
+                        system_instruction=system,
+                    ) if system else None,
+                )
+                if response.text:
+                    return response.text
+            except Exception as e:
+                logger.warning("File model %s failed: %s. Trying fallback...", model_name, e)
+
+    return "⚠️ Could not analyze file."
+
+
 async def parse_schedule(raw_text: str) -> str:
     """Parse an Aakash WhatsApp schedule message into structured JSON."""
     return await ask(

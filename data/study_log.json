@@ -1,3 +1,27 @@
 {
-  "days": {}
+  "days": {
+    "2026-08-17": {
+      "sessions": [
+        {
+          "subject": "<maths><wavy",
+          "topic": "curve method><r>",
+          "hours": 1.0,
+          "questions": 0
+        },
+        {
+          "subject": "<chemistry><average",
+          "topic": "atomic mass><r>",
+          "hours": 1.0,
+          "questions": 0
+        },
+        {
+          "subject": "<chemistry><average",
+          "topic": "atomic mass><r>",
+          "hours": 1.0,
+          "questions": 0
+        }
+      ],
+      "total_hours": 3.0
+    }
+  }
 }
