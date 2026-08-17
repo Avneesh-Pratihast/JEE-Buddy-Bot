@@ -19,6 +19,8 @@ raw_keys = os.getenv("GEMINI_API_KEYS", GEMINI_API_KEY)
 GEMINI_API_KEYS: list[str] = [k.strip() for k in raw_keys.split(",") if k.strip()]
 if not GEMINI_API_KEYS and GEMINI_API_KEY:
     GEMINI_API_KEYS = [GEMINI_API_KEY]
+if not GEMINI_API_KEY and GEMINI_API_KEYS:
+    GEMINI_API_KEY = GEMINI_API_KEYS[0]
 
 # ── User ────────────────────────────────────────────────────────────────────
 # Your Telegram numeric chat ID (send /start to @userinfobot to find it)
@@ -60,8 +62,8 @@ def validate() -> list[str]:
     missing = []
     if not TELEGRAM_BOT_TOKEN:
         missing.append("TELEGRAM_BOT_TOKEN")
-    if not GEMINI_API_KEY:
-        missing.append("GEMINI_API_KEY")
+    if not GEMINI_API_KEY and not GEMINI_API_KEYS:
+        missing.append("GEMINI_API_KEY / GEMINI_API_KEYS")
     # Chat ID 0 is allowed for initial setup (get ID from /start)
     return missing
 
