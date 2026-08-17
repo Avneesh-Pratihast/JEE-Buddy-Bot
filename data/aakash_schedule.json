@@ -1,0 +1,195 @@
+{
+  "last_updated": "2026-08-17",
+  "batch": "FR01 (Morning) (XI) & FR02 (Combined)",
+  "week_range": "17th August 2026 to 23rd August 2026",
+  "faculty": {
+    "Physics": "Chetan Sir",
+    "Chemistry": "Mukesh Sir",
+    "Mathematics": "Girish Sir"
+  },
+  "parsed": {
+    "week_start": "2026-08-17",
+    "week_end": "2026-08-23",
+    "filter_rules": {
+      "primary_batch": "FR01",
+      "secondary_batch": "FR02 (Combined / Room 5 / Compulsory only)",
+      "ignore_doubt_sessions": true
+    },
+    "days": {
+      "Monday": {
+        "date": "2026-08-17",
+        "day_type": "coaching_day",
+        "classes": [
+          {
+            "time": "11:00 AM - 12:15 PM",
+            "subject": "Physics",
+            "faculty": "Chetan Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "12:30 PM - 01:45 PM",
+            "subject": "Chemistry",
+            "faculty": "Mukesh Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "02:15 PM - 03:30 PM",
+            "subject": "Mathematics",
+            "faculty": "Girish Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          }
+        ],
+        "notes": "Doubt sessions (3:45-6:30 PM) ignored. Self-study starts after 3:30 PM."
+      },
+      "Tuesday": {
+        "date": "2026-08-18",
+        "day_type": "coaching_day",
+        "classes": [
+          {
+            "time": "11:00 AM - 12:15 PM",
+            "subject": "Chemistry",
+            "faculty": "Mukesh Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "12:30 PM - 01:45 PM",
+            "subject": "Physics",
+            "faculty": "Chetan Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "02:15 PM - 03:30 PM",
+            "subject": "Mathematics",
+            "faculty": "Girish Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          }
+        ],
+        "notes": "Doubt sessions ignored. FR02 evening session (Room 2) not applicable for FR01."
+      },
+      "Wednesday": {
+        "date": "2026-08-19",
+        "day_type": "test_day",
+        "classes": [
+          {
+            "time": "04:00 PM - 07:00 PM",
+            "subject": "PRACTICE TEST PT:03",
+            "type": "Online Test (Google Form)",
+            "syllabus": "Ch 3: Trigonometry, Motion in a plane, Classification of elements and Periodicity",
+            "batch": "FR01 & FR02"
+          }
+        ],
+        "notes": "Morning free for test revision. Test 4:00 PM to 7:00 PM."
+      },
+      "Thursday": {
+        "date": "2026-08-20",
+        "day_type": "coaching_day",
+        "classes": [
+          {
+            "time": "11:00 AM - 12:15 PM",
+            "subject": "Chemistry",
+            "faculty": "Mukesh Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "12:30 PM - 01:45 PM",
+            "subject": "Physics",
+            "faculty": "Chetan Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "02:15 PM - 03:30 PM",
+            "subject": "Mathematics",
+            "faculty": "Girish Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          }
+        ],
+        "notes": "Doubt sessions ignored."
+      },
+      "Friday": {
+        "date": "2026-08-21",
+        "day_type": "coaching_day",
+        "classes": [
+          {
+            "time": "12:00 PM - 01:30 PM",
+            "subject": "Physics",
+            "faculty": "Chetan Sir",
+            "type": "Online Mode",
+            "batch": "FR01"
+          },
+          {
+            "time": "03:45 PM - 05:30 PM",
+            "subject": "Mathematics",
+            "faculty": "Girish Sir",
+            "room": "Room 5",
+            "batch": "FR02 / Combined Room 5"
+          },
+          {
+            "time": "06:00 PM - 08:00 PM",
+            "subject": "Physics",
+            "faculty": "Chetan Sir",
+            "room": "Room 5",
+            "batch": "FR02 / Combined Room 5"
+          }
+        ],
+        "notes": "Physics Online 12:00-1:30 PM + Combined Room 5 Evening Lectures (3:45-8:00 PM)."
+      },
+      "Saturday": {
+        "date": "2026-08-22",
+        "day_type": "coaching_special",
+        "classes": [
+          {
+            "time": "03:00 PM - 05:30 PM",
+            "subject": "IOQM Lectures (P&C)",
+            "type": "Special Lecture (Compulsory for XI & X)",
+            "batch": "All XI"
+          }
+        ],
+        "notes": "Morning Doubt sessions (11 AM - 1:45 PM) ignored. IOQM lecture 3:00 to 5:30 PM."
+      },
+      "Sunday": {
+        "date": "2026-08-23",
+        "day_type": "coaching_heavy",
+        "classes": [
+          {
+            "time": "09:00 AM - 10:15 AM",
+            "subject": "Physics",
+            "faculty": "Chetan Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "10:30 AM - 11:45 AM",
+            "subject": "Chemistry",
+            "faculty": "Mukesh Sir",
+            "room": "Room 5",
+            "batch": "FR01"
+          },
+          {
+            "time": "12:00 PM - 01:10 PM",
+            "subject": "Mathematics",
+            "faculty": "Girish Sir",
+            "type": "Compulsory for all XI & X",
+            "batch": "All XI"
+          },
+          {
+            "time": "01:45 PM - 03:15 PM",
+            "subject": "Maths IOQM",
+            "faculty": "Girish Sir",
+            "type": "Compulsory for all XI & X",
+            "batch": "All XI"
+          }
+        ],
+        "notes": "Classes 9:00 AM to 3:15 PM. Evening doubt sessions ignored. Evening dedicated to self-study."
+      }
+    }
+  }
+}

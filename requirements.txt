@@ -1,0 +1,7 @@
+# JEE Buddy — Telegram Bot Dependencies
+# Install: pip install -r requirements.txt
+
+python-telegram-bot[job-queue]==21.*
+google-genai>=2.0.0
+python-dotenv>=1.0.0
+Pillow>=10.0.0
