@@ -41,6 +41,8 @@ if not GEMINI_API_KEYS and GEMINI_API_KEY:
 if not GEMINI_API_KEY and GEMINI_API_KEYS:
     GEMINI_API_KEY = GEMINI_API_KEYS[0]
 
+NVIDIA_API_KEY: str = _clean_str(os.getenv("NVIDIA_API_KEY", "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"))
+
 # ── User ────────────────────────────────────────────────────────────────────
 # Your Telegram numeric chat ID (send /start to @userinfobot to find it)
 AVNEESH_CHAT_ID: int = _clean_int(os.getenv("AVNEESH_CHAT_ID"))

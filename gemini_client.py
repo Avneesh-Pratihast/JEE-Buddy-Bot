@@ -94,11 +94,11 @@ SCHEDULE_PARSER_SYSTEM = (
 
 
 async def ask(prompt: str, *, system: str | None = JEE_SYSTEM) -> str:
-    """Send a text prompt to Gemini with multi-key rotation and multi-model fallback."""
+    """Send a text prompt to Gemini with optimal model prioritization and multi-key fallback."""
     clients = _get_clients()
 
-    for client in clients:
-        for model_name in FALLBACK_MODELS:
+    for model_name in FALLBACK_MODELS:
+        for client_idx, client in enumerate(clients):
             try:
                 response = await client.aio.models.generate_content(
                     model=model_name,
@@ -110,7 +110,12 @@ async def ask(prompt: str, *, system: str | None = JEE_SYSTEM) -> str:
                 if response.text:
                     return response.text
             except Exception as e:
-                logger.warning("Model %s with key %s failed: %s. Trying fallback...", model_name, client, e)
+                logger.warning(
+                    "Model %s with Key #%d failed (%s). Trying next fallback...",
+                    model_name,
+                    client_idx + 1,
+                    e,
+                )
 
     return "⚠️ High traffic on AI servers. Please retry in a moment."
 
@@ -121,12 +126,12 @@ async def ask_with_image(
     *,
     system: str | None = JEE_SYSTEM,
 ) -> str:
-    """Send an image + text prompt to Gemini with multi-key rotation and multi-model fallback."""
+    """Send an image + text prompt to Gemini with multi-model and multi-key fallback."""
     clients = _get_clients()
     img = Image.open(BytesIO(image_bytes))
 
-    for client in clients:
-        for model_name in FALLBACK_MODELS:
+    for model_name in FALLBACK_MODELS:
+        for client_idx, client in enumerate(clients):
             try:
                 response = await client.aio.models.generate_content(
                     model=model_name,
@@ -138,7 +143,12 @@ async def ask_with_image(
                 if response.text:
                     return response.text
             except Exception as e:
-                logger.warning("Vision model %s failed: %s. Trying fallback...", model_name, e)
+                logger.warning(
+                    "Vision model %s with Key #%d failed (%s). Trying next fallback...",
+                    model_name,
+                    client_idx + 1,
+                    e,
+                )
 
     return "⚠️ Could not analyze image. Try a clearer photo."
 
@@ -150,14 +160,12 @@ async def ask_with_file(
     *,
     system: str | None = None,
 ) -> str:
-    """Send a file (like PDF) + text prompt to Gemini."""
+    """Send a file (like PDF) + text prompt to Gemini with multi-model and multi-key fallback."""
     clients = _get_clients()
-    
-    # Use google.genai types
     part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
 
-    for client in clients:
-        for model_name in FALLBACK_MODELS:
+    for model_name in FALLBACK_MODELS:
+        for client_idx, client in enumerate(clients):
             try:
                 response = await client.aio.models.generate_content(
                     model=model_name,
@@ -169,7 +177,12 @@ async def ask_with_file(
                 if response.text:
                     return response.text
             except Exception as e:
-                logger.warning("File model %s failed: %s. Trying fallback...", model_name, e)
+                logger.warning(
+                    "File model %s with Key #%d failed (%s). Trying next fallback...",
+                    model_name,
+                    client_idx + 1,
+                    e,
+                )
 
     return "⚠️ Could not analyze file."
 
