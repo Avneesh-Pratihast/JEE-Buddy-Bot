@@ -682,62 +682,57 @@ def main() -> None:
         logger.error("Copy .env.example → .env and fill in your values.")
         sys.exit(1)
 
-    logger.info("Starting JEE Buddy Bot...")
+    logger.info("Starting JEE Buddy Bot polling engine...")
 
-    # Build application
-    app = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
+    def build_and_run():
+        app = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
 
-    # Register command handlers
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_help))
-    app.add_handler(CommandHandler("plan", cmd_plan))
-    app.add_handler(CommandHandler("done", cmd_done))
-    app.add_handler(CommandHandler("doubt", cmd_doubt))
-    app.add_handler(CommandHandler("schedule", cmd_schedule))
-    app.add_handler(CommandHandler("week", cmd_week))
-    app.add_handler(CommandHandler("streak", cmd_streak))
-    app.add_handler(CommandHandler("review", cmd_review))
-    app.add_handler(CommandHandler("reviewed", cmd_reviewed))
-    app.add_handler(CommandHandler("progress", cmd_progress))
-    app.add_handler(CommandHandler("error", cmd_error))
+        # Register command handlers
+        app.add_handler(CommandHandler("start", cmd_start))
+        app.add_handler(CommandHandler("help", cmd_help))
+        app.add_handler(CommandHandler("plan", cmd_plan))
+        app.add_handler(CommandHandler("done", cmd_done))
+        app.add_handler(CommandHandler("doubt", cmd_doubt))
+        app.add_handler(CommandHandler("schedule", cmd_schedule))
+        app.add_handler(CommandHandler("week", cmd_week))
+        app.add_handler(CommandHandler("streak", cmd_streak))
+        app.add_handler(CommandHandler("review", cmd_review))
+        app.add_handler(CommandHandler("reviewed", cmd_reviewed))
+        app.add_handler(CommandHandler("progress", cmd_progress))
+        app.add_handler(CommandHandler("error", cmd_error))
 
-    # Photo handler (for doubt solving via images)
-    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    
-    # Document handler (for PDF schedules)
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+        # Photo handler (for doubt solving via images)
+        app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+        
+        # Document handler (for PDF schedules)
+        app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
 
-    # Forwarded message handler (for Aakash schedule parsing)
-    app.add_handler(
-        MessageHandler(filters.FORWARDED & filters.TEXT, handle_forwarded)
-    )
-
-    # ── Schedule daily jobs (IST = UTC+5:30) ────────────────────────────
-    jq = app.job_queue
-    if jq is not None:
-        jq.run_daily(job_morning_plan, time=time(1, 0))      # IST 6:30 AM
-        jq.run_daily(job_post_coaching, time=time(9, 30))     # IST 3:00 PM
-        jq.run_daily(job_revision_alert, time=time(13, 30))   # IST 7:00 PM
-        jq.run_daily(job_night_log, time=time(17, 0))         # IST 10:30 PM
-        jq.run_daily(job_weekly_report, time=time(14, 30))    # IST 8:00 PM Sun
-        logger.info("Scheduled jobs registered (IST times via UTC offsets)")
-    else:
-        logger.warning(
-            "job_queue not available — install python-telegram-bot[job-queue]"
+        # Forwarded message handler (for Aakash schedule parsing)
+        app.add_handler(
+            MessageHandler(filters.FORWARDED & filters.TEXT, handle_forwarded)
         )
 
-    # Start polling
-    logger.info("Bot is running! Press Ctrl+C to stop.")
+        # ── Schedule daily jobs (IST = UTC+5:30) ────────────────────────
+        jq = app.job_queue
+        if jq is not None:
+            jq.run_daily(job_morning_plan, time=time(1, 0))      # IST 6:30 AM
+            jq.run_daily(job_post_coaching, time=time(9, 30))     # IST 3:00 PM
+            jq.run_daily(job_revision_alert, time=time(13, 30))   # IST 7:00 PM
+            jq.run_daily(job_night_log, time=time(17, 0))         # IST 10:30 PM
+            jq.run_daily(job_weekly_report, time=time(14, 30))    # IST 8:00 PM Sun
+            logger.info("Scheduled jobs registered (IST times via UTC offsets)")
+
+        # Start polling with clean error handling
+        logger.info("Bot is active and polling Telegram...")
+        app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=False)
+
     while True:
         try:
-            app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+            build_and_run()
         except Exception as e:
-            logger.exception("Error during bot polling: %s", e)
-        if port > 0:
-            import asyncio
-            asyncio.run(asyncio.sleep(5))
-        else:
-            break
+            logger.exception("Error during bot polling cycle: %s. Reconnecting in 5s...", e)
+            import time as _sys_time
+            _sys_time.sleep(5)
 
 
 if __name__ == "__main__":
