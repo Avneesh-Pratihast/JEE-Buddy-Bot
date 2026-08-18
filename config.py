@@ -26,8 +26,11 @@ def _clean_int(val: str | None, default: int = 0) -> int:
         return default
 
 
-# ── API Keys ────────────────────────────────────────────────────────────────
-TELEGRAM_BOT_TOKEN: str = _clean_str(os.getenv("TELEGRAM_BOT_TOKEN", "8654107416:AAHJMbwdQXW_SsSIQg7EfIC1e_dfwx3FnJY"))
+_token_env = _clean_str(os.getenv("TELEGRAM_BOT_TOKEN"))
+if not _token_env or "AAEX1xef" in _token_env:
+    TELEGRAM_BOT_TOKEN: str = "8654107416:AAHJMbwdQXW_SsSIQg7EfIC1e_dfwx3FnJY"
+else:
+    TELEGRAM_BOT_TOKEN: str = _token_env
 GEMINI_API_KEY: str = _clean_str(os.getenv("GEMINI_API_KEY"))
 
 # Support multiple Gemini API keys (comma-separated or single)
