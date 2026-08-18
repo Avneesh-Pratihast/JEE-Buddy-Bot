@@ -71,14 +71,22 @@ def send_telegram_message(text: str, chat_id: int | None = None) -> bool:
 
 async def run_morning_plan_pipeline() -> str:
     """
-    1. Reads chapter tracker, Aakash timetable (FR01), routine (4:30 PM start), spaced rep queue.
-    2. Generates elite daily study plan.
-    3. Saves to Obsidian (01_Daily_Logs/YYYY-MM-DD.md).
-    4. Pushes formatted plan directly to Telegram.
+    1. Reads yesterday's logged sessions to compile Previous Day Performance Report.
+    2. Reads chapter tracker, Aakash timetable (FR01), routine (4:30 PM start), spaced rep queue.
+    3. Generates elite daily study plan.
+    4. Saves to Obsidian (01_Daily_Logs/YYYY-MM-DD.md).
+    5. Pushes combined Previous Day Report + Today's Plan directly to Telegram.
     """
     today = date.today()
-    logger.info("Generating morning plan for %s", today.isoformat())
+    yesterday = today - timedelta(days=1)
+    logger.info("Generating morning report for %s and plan for %s", yesterday.isoformat(), today.isoformat())
 
+    # 1. Previous Day Report
+    yesterday_summary = await scheduler.generate_progress_summary(yesterday)
+    streak = scheduler.get_streak()
+    streak_str = f"🔥 Streak: **{streak} days**" if streak > 0 else "🔥 Streak: **Day 1**"
+
+    # 2. Today's Plan
     plan = await scheduler.generate_daily_plan(today)
 
     # Save to Obsidian
@@ -87,13 +95,20 @@ async def run_morning_plan_pipeline() -> str:
 
     # Format and push to Telegram
     day_name = today.strftime("%A")
+    yesterday_day_name = yesterday.strftime("%A")
     tg_message = (
-        f"🌅 **Good Morning Avneesh!**\n"
-        f"📅 **Study Plan for {today.isoformat()} ({day_name})**\n\n"
+        f"🌅 **Good Morning Avneesh!**\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📊 **PREVIOUS DAY REPORT ({yesterday.isoformat()} - {yesterday_day_name})**\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"{yesterday_summary}\n\n"
+        f"{streak_str}\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📋 **TODAY'S STUDY PLAN ({today.isoformat()} - {day_name})**\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"🏋️ *Workout*: 8:30 AM – 10:00 AM\n"
         f"🏫 *Coaching*: 11:00 AM – 3:30 PM (Batch FR01)\n"
         f"⚡ *Deep Self-Study Window*: **Starts 4:30 PM**\n\n"
-        f"---\n\n"
         f"{plan}\n\n"
         f"📝 *Saved to Obsidian*: `{obsidian_path.name}`\n"
         f"Reply with `/done <Subject> <Topic> <hours>h <questions>q` when completing sessions!"
