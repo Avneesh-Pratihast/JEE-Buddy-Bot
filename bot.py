@@ -53,10 +53,8 @@ async def _send_long(
 ) -> None:
     """Send a message, splitting if it exceeds Telegram's limit."""
     if hasattr(update_or_context, "message") and update_or_context.message:
-        # Called from a command handler with Update
         send = update_or_context.message.reply_text
     else:
-        # Called from a scheduled job with context
         ctx = update_or_context
         async def send(t, **kw):
             await ctx.bot.send_message(
@@ -65,14 +63,23 @@ async def _send_long(
 
     chunks = [text[i : i + MAX_MSG_LEN] for i in range(0, len(text), MAX_MSG_LEN)]
     for chunk in chunks:
-        await send(chunk, parse_mode=ParseMode.MARKDOWN)
+        try:
+            await send(chunk, parse_mode=ParseMode.MARKDOWN)
+        except Exception as e:
+            logger.warning("Markdown send failed (%s). Retrying as plain text...", e)
+            try:
+                await send(chunk)
+            except Exception as e2:
+                logger.exception("Failed to send message: %s", e2)
 
 
 def _is_avneesh(update: Update) -> bool:
     """Check if the message is from Avneesh (security guard)."""
+    if not update.effective_chat:
+        return True
     if config.AVNEESH_CHAT_ID == 0:
-        return True  # No restriction if chat ID not set
-    return update.effective_chat.id == config.AVNEESH_CHAT_ID
+        return True
+    return str(update.effective_chat.id).strip() == str(config.AVNEESH_CHAT_ID).strip()
 
 
 # ── Command Handlers ───────────────────────────────────────────────────────
@@ -261,7 +268,7 @@ async def cmd_streak(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     else:
         msg = f"🔥🔥🔥 Streak: **{streak} days**\nLEGENDARY consistency! 🏆"
 
-    await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+    await _send_long(update, msg)
 
 
 async def cmd_backlog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -269,8 +276,6 @@ async def cmd_backlog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not _is_avneesh(update):
         return
 
-    progress = obsidian_writer.get_phase1_progress()
-    
     msg = (
         "📦 **JEE 2028 Backlog Management System**\n\n"
         "🎯 **Backlog Golden Rule**:\n"
@@ -288,7 +293,7 @@ async def cmd_backlog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         "3️⃣ 30 Selected PYQs (10○ Easy, 15△ Medium, 5★ Hard)\n\n"
         "Type `/plan` on weekends to auto-generate backlog study blocks!"
     )
-    await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+    await _send_long(update, msg)
 
 
 async def cmd_review(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -297,7 +302,7 @@ async def cmd_review(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
 
     msg = spaced_rep.format_due_reviews()
-    await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+    await _send_long(update, msg)
 
 
 async def cmd_reviewed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -307,10 +312,10 @@ async def cmd_reviewed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     parts = update.message.text.replace("/reviewed", "").strip().split()
     if len(parts) < 1:
-        await update.message.reply_text(
+        await _send_long(
+            update,
             "Usage: `/reviewed <item_id> [review_type]`\n"
             "Example: `/reviewed abc123 day_7`",
-            parse_mode=ParseMode.MARKDOWN,
         )
         return
 
@@ -318,14 +323,14 @@ async def cmd_reviewed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     review_type = parts[1] if len(parts) > 1 else "day_7"
 
     if spaced_rep.mark_reviewed(item_id, review_type):
-        await update.message.reply_text(
+        await _send_long(
+            update,
             f"✅ Marked review as complete! Great job revising! 💪",
-            parse_mode=ParseMode.MARKDOWN,
         )
     else:
-        await update.message.reply_text(
+        await _send_long(
+            update,
             "❌ Review item not found. Check `/review` for your queue.",
-            parse_mode=ParseMode.MARKDOWN,
         )
 
 
@@ -346,7 +351,7 @@ async def cmd_progress(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             f"⬜ {s['not_started']} remaining"
         )
 
-    await update.message.reply_text("\n\n".join(lines), parse_mode=ParseMode.MARKDOWN)
+    await _send_long(update, "\n\n".join(lines))
 
 
 async def cmd_error(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
