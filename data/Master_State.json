@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "student": "Avneesh",
+    "target_exam": "JEE Advanced 2028",
+    "target_air": "< 100",
+    "current_phase": 1,
+    "phase_name": "Core Foundation & Syllabus Recovery",
+    "phase_start": "2026-08-15",
+    "phase_end": "2027-01-31",
+    "total_study_target_hrs": 1498,
+    "completed_study_hrs": 8.0,
+    "last_updated": "2026-08-18"
+  },
+  "subjects": {
+    "Physics": {
+      "target_study_hrs": 345,
+      "target_revision_hrs": 101,
+      "total_target_hrs": 446,
+      "completed_hrs": 5.0,
+      "current_focus": "Kinematics (1D & 2D)",
+      "focus_priority": "High"
+    },
+    "Chemistry": {
+      "target_study_hrs": 440,
+      "target_revision_hrs": 128,
+      "total_target_hrs": 568,
+      "completed_hrs": 0.0,
+      "current_focus": "Periodic Classification & Properties",
+      "focus_priority": "High"
+    },
+    "Mathematics": {
+      "target_study_hrs": 376,
+      "target_revision_hrs": 108,
+      "total_target_hrs": 484,
+      "completed_hrs": 3.0,
+      "current_focus": "Trigonometry (Ratios, Equations, SOT)",
+      "focus_priority": "High"
+    }
+  },
+  "backlog_reservoir": [
+    {
+      "date_missed": "2026-08-18",
+      "subject": "Chemistry",
+      "topic": "Periodic Table",
+      "deficit_hours": 1.5,
+      "priority": "Critical (PT:03 Syllabus)",
+      "status": "Pending (Weekend Slot)"
+    },
+    {
+      "date_missed": "2026-08-18",
+      "subject": "Chemistry",
+      "topic": "Periodic Table",
+      "deficit_hours": 1.5,
+      "priority": "Critical (PT:03 Syllabus)",
+      "status": "Pending (Weekend Slot)"
+    }
+  ],
+  "spaced_repetition_queue": [
+    {
+      "date_logged": "2026-08-18",
+      "subject": "Physics",
+      "topic": "Kinematics",
+      "error_type": "Calculation Error",
+      "description": "Calculation silly mistake on 2 projectile velocity questions.",
+      "day7_due": "2026-08-25",
+      "day30_due": "2026-09-17",
+      "status": "Due Day 7"
+    },
+    {
+      "date_logged": "2026-08-18",
+      "subject": "Physics",
+      "topic": "Kinematics (Projectile Motion)",
+      "error_type": "Calculation Error",
+      "description": "Calculation silly mistake on 2 projectile velocity questions.",
+      "day7_due": "2026-08-25",
+      "day30_due": "2026-09-17",
+      "status": "Due Day 7"
+    }
+  ],
+  "upcoming_tests": [
+    {
+      "name": "Practice Test PT:03",
+      "date": "2026-08-20",
+      "timing": "04:00 PM - 07:00 PM",
+      "syllabus": [
+        "Mathematics: Trigonometric Functions & Equations",
+        "Physics: Motion in a Plane (2D Motion)",
+        "Chemistry: Classification of Elements & Periodicity"
+      ],
+      "priority": "Critical"
+    }
+  ]
+}

@@ -29,6 +29,7 @@ from telegram.ext import (
 import config
 import doubt_solver
 import gemini_client
+import master_orchestrator
 import obsidian_writer
 import scheduler
 import spaced_rep
@@ -272,36 +273,20 @@ async def cmd_streak(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 
 async def cmd_backlog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /backlog — show backlog recovery protocol and priorities."""
+    """Handle /backlog — show dynamic backlog reservoir with PT/Pareto priorities."""
     if not _is_avneesh(update):
         return
 
-    msg = (
-        "📦 **JEE 2028 Backlog Management System**\n\n"
-        "🎯 **Backlog Golden Rule**:\n"
-        "⚠️ *NEVER compromise ongoing coaching lectures for backlog!*\n\n"
-        "⏰ **Dedicated Backlog Slots**:\n"
-        "• **Saturday**: 1.5h Afternoon\n"
-        "• **Sunday**: 3.0h Morning (4.5h weekly recovery buffer)\n\n"
-        "🔥 **Pareto High-Yield Recovery Order**:\n"
-        "1. **Physics**: Kinematics → NLM & Friction → Work-Power-Energy\n"
-        "2. **Chemistry**: Mole Concept → Periodic Table → Chemical Bonding → GOC\n"
-        "3. **Mathematics**: Basic Math & Logarithms → Quadratic Equations → Trigonometry\n\n"
-        "🚀 **Fast-Track Recovery Protocol**:\n"
-        "1️⃣ 1.5x One-Shot Lecture (Conceptual clarity)\n"
-        "2️⃣ 1-Page Formula Summary\n"
-        "3️⃣ 30 Selected PYQs (10○ Easy, 15△ Medium, 5★ Hard)\n\n"
-        "Type `/plan` on weekends to auto-generate backlog study blocks!"
-    )
+    msg = master_orchestrator.get_backlog_summary()
     await _send_long(update, msg)
 
 
 async def cmd_review(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /review — show spaced repetition queue."""
+    """Handle /review — show 1-7-30 spaced repetition review queue."""
     if not _is_avneesh(update):
         return
 
-    msg = spaced_rep.format_due_reviews()
+    msg = master_orchestrator.get_spaced_rep_summary()
     await _send_long(update, msg)
 
 
@@ -407,6 +392,65 @@ async def cmd_error(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"Open in Obsidian to fill in the full solution and takeaway!",
         parse_mode=ParseMode.MARKDOWN,
     )
+
+
+# ── Natural Language Message Classifier & Handler ──────────────────────────
+
+async def handle_natural_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Intelligently handles plain text and voice transcripts.
+    Classifies between:
+    1. Daily Study Recap / Evening Check-In -> master_orchestrator
+    2. Academic JEE Question / Doubt -> doubt_solver
+    3. General Conversation -> Gemini tutor
+    """
+    if not _is_avneesh(update):
+        return
+
+    text = update.message.text.strip()
+    if not text:
+        return
+
+    # Check for keywords indicating study recap / evening check-in
+    recap_keywords = ["studied", "hours", "hrs", "skipped", "missed", "questions", "solved", "pyq", "recap", "done today", "coaching was", "mistake"]
+    is_likely_recap = any(k in text.lower() for k in recap_keywords)
+
+    if is_likely_recap:
+        await update.message.reply_text("⚡ Processing your study check-in & balancing backlog...")
+        try:
+            result = await master_orchestrator.process_evening_log(text)
+            p = result.get("physics", 0)
+            c = result.get("chemistry", 0)
+            m = result.get("math", 0)
+            total = result.get("total_day_hours", 0)
+            summary = result.get("summary", "")
+
+            msg = (
+                f"✅ **Evening Study Check-In Logged!**\n\n"
+                f"📊 **Hours Recorded**:\n"
+                f"  ⚛️ Physics: `{p}h`\n"
+                f"  🧪 Chemistry: `{c}h`\n"
+                f"  📐 Mathematics: `{m}h`\n"
+                f"  🔥 **Total Studied**: `{total} hours`\n\n"
+                f"📋 **Executive Assessment**:\n{summary}\n\n"
+                f"💾 _Synchronized with Master_State.json & Obsidian Daily Logs!_"
+            )
+            await _send_long(update, msg)
+            return
+        except Exception as e:
+            logger.exception("Error in natural language evening check-in: %s", e)
+
+    # Otherwise, check if it's an academic doubt or question
+    await update.message.reply_text("🧠 Analyzing academic problem...")
+    try:
+        solution = await doubt_solver.solve_text(text)
+        await _send_long(update, solution)
+        await update.message.reply_text(
+            "💡 Want me to log this in your Error Database? Reply with `/error <Subject> <Topic> <Mistake>`"
+        )
+    except Exception as e:
+        logger.exception("Error solving text question: %s", e)
+        await update.message.reply_text("⚠️ Could not process that message. Please try again.")
 
 
 # ── Photo Handler ───────────────────────────────────────────────────────────
@@ -743,6 +787,11 @@ def main() -> None:
         # Forwarded message handler (for Aakash schedule parsing)
         app.add_handler(
             MessageHandler(filters.FORWARDED & filters.TEXT, handle_forwarded)
+        )
+
+        # Natural Language Text & Doubt Handler (plain text & voice transcripts)
+        app.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_natural_text)
         )
 
         # ── Schedule daily jobs (IST = UTC+5:30) ────────────────────────

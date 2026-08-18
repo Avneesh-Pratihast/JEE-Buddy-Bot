@@ -67,6 +67,10 @@ elif Path(r"C:\Users\HP\.gemini\config\skills\jee-study-commander\resources\chap
 else:
     CHAPTER_TRACKER = DATA_DIR / "chapter_tracker.json"
 
+MASTER_STATE_PATH = OBSIDIAN_VAULT / "00_Strategy" / "Master_State.json"
+if not MASTER_STATE_PATH.exists():
+    MASTER_STATE_PATH = DATA_DIR / "Master_State.json"
+
 # ── Gemini Model ────────────────────────────────────────────────────────────
 GEMINI_MODEL: str = _clean_str(os.getenv("GEMINI_MODEL"), "gemini-3.7-flash")
 
