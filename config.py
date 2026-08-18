@@ -63,7 +63,7 @@ else:
     CHAPTER_TRACKER = DATA_DIR / "chapter_tracker.json"
 
 # ── Gemini Model ────────────────────────────────────────────────────────────
-GEMINI_MODEL: str = _clean_str(os.getenv("GEMINI_MODEL"), "gemini-3.5-flash")
+GEMINI_MODEL: str = _clean_str(os.getenv("GEMINI_MODEL"), "gemini-3.7-flash")
 
 # ── Schedule Times (24h format, IST) ────────────────────────────────────────
 MORNING_PLAN_HOUR, MORNING_PLAN_MIN = 6, 30        # 6:30 AM
