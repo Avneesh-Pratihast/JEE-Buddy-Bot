@@ -27,7 +27,7 @@ def _clean_int(val: str | None, default: int = 0) -> int:
 
 
 # ── API Keys ────────────────────────────────────────────────────────────────
-TELEGRAM_BOT_TOKEN: str = _clean_str(os.getenv("TELEGRAM_BOT_TOKEN"))
+TELEGRAM_BOT_TOKEN: str = _clean_str(os.getenv("TELEGRAM_BOT_TOKEN", "8654107416:AAHJMbwdQXW_SsSIQg7EfIC1e_dfwx3FnJY"))
 GEMINI_API_KEY: str = _clean_str(os.getenv("GEMINI_API_KEY"))
 
 # Support multiple Gemini API keys (comma-separated or single)
