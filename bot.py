@@ -264,6 +264,33 @@ async def cmd_streak(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
 
+async def cmd_backlog(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /backlog — show backlog recovery protocol and priorities."""
+    if not _is_avneesh(update):
+        return
+
+    progress = obsidian_writer.get_phase1_progress()
+    
+    msg = (
+        "📦 **JEE 2028 Backlog Management System**\n\n"
+        "🎯 **Backlog Golden Rule**:\n"
+        "⚠️ *NEVER compromise ongoing coaching lectures for backlog!*\n\n"
+        "⏰ **Dedicated Backlog Slots**:\n"
+        "• **Saturday**: 1.5h Afternoon\n"
+        "• **Sunday**: 3.0h Morning (4.5h weekly recovery buffer)\n\n"
+        "🔥 **Pareto High-Yield Recovery Order**:\n"
+        "1. **Physics**: Kinematics → NLM & Friction → Work-Power-Energy\n"
+        "2. **Chemistry**: Mole Concept → Periodic Table → Chemical Bonding → GOC\n"
+        "3. **Mathematics**: Basic Math & Logarithms → Quadratic Equations → Trigonometry\n\n"
+        "🚀 **Fast-Track Recovery Protocol**:\n"
+        "1️⃣ 1.5x One-Shot Lecture (Conceptual clarity)\n"
+        "2️⃣ 1-Page Formula Summary\n"
+        "3️⃣ 30 Selected PYQs (10○ Easy, 15△ Medium, 5★ Hard)\n\n"
+        "Type `/plan` on weekends to auto-generate backlog study blocks!"
+    )
+    await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+
+
 async def cmd_review(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /review — show spaced repetition queue."""
     if not _is_avneesh(update):
@@ -696,6 +723,7 @@ def main() -> None:
         app.add_handler(CommandHandler("schedule", cmd_schedule))
         app.add_handler(CommandHandler("week", cmd_week))
         app.add_handler(CommandHandler("streak", cmd_streak))
+        app.add_handler(CommandHandler("backlog", cmd_backlog))
         app.add_handler(CommandHandler("review", cmd_review))
         app.add_handler(CommandHandler("reviewed", cmd_reviewed))
         app.add_handler(CommandHandler("progress", cmd_progress))
